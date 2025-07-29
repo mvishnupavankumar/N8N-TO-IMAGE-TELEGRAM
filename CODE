@@ -1,0 +1,1771 @@
+{
+  "name": "N8N TO IMAGE TELEGRAM",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1ce6a895-0d38-4347-b485-dcb60039a1f5",
+              "name": "SCRIPT",
+              "value": "={{ $json.body.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1616,
+        1040
+      ],
+      "id": "7f691327-a033-4832-9ea4-b4a6efdb7c94",
+      "name": " SENDING SCRIPT"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1888,
+        768
+      ],
+      "id": "2d58bebb-ac62-496d-8920-726e11a4b175",
+      "name": "Telegram Trigger",
+      "webhookId": "YOUR_WEBHOOK_URL",
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_ME",
+          "name": " N8N TESTING"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.document.file_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1664,
+        768
+      ],
+      "id": "23f117b8-9ce8-4838-a5e1-d8c4cb8ac243",
+      "name": "Get a file",
+      "webhookId": "YOUR_WEBHOOK_URL",
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_ME",
+          "name": " N8N TESTING"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": " const binaryData = items[0].binary.data;\n\nif (!binaryData || !binaryData.data) {\n  throw new Error(\"No binary data found in property 'data'\");\n}\n\n// Parse uploaded workflow file\nconst fileBuffer = Buffer.from(binaryData.data, 'base64');\nconst originalWorkflow = JSON.parse(fileBuffer.toString());\n\n// Return the workflow directly (no \"workflow\" wrapper)\nreturn [\n  {\n    json: originalWorkflow\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1440,
+        768
+      ],
+      "id": "ccbae55c-46cf-489e-b0d1-9ae1a7175707",
+      "name": "EXTRACT JSON"
+    },
+    {
+      "parameters": {
+        "jsCode": " const workflow = $json;\n\nconst prompt = `\nYou are a friendly explainer who helps anyone understand automation workflows, even if they don't know coding or technical terms.\n\nI will give you an n8n workflow JSON. \n\nYour job is to:\n\n### ✨ 1. Extract the MAIN PURPOSE\n- What is the workflow trying to do overall?\n- Explain it in one simple sentence anyone can understand.\n\n### ⚙️ 2. Step-by-step Explanation (No technical words)\nFor each step:\n- Say what that part **does** using plain language.\n- Explain **why it's useful** in the flow.\n- Avoid words like “node”, “parameter”, “function”, “API”, or “JSON”.\n\n### 🎯 3. Result\n- What happens when the whole workflow finishes?\n\nKeep everything short, clear, and beginner-friendly.\n\nUse this format for your output:\n\n---\n\n## ✨ What does this workflow do?\n\n→ [1 sentence description of the goal]\n\n---\n\n## 🧩 How it works (Step by Step):\n\n1. **Step Name:** [Plain language explanation of what happens]  \n   ➤ Why? [Why this is needed]\n\n2. **Step Name:** [Plain language explanation]  \n   ➤ Why? [Reason]\n\n...\n\n---\n\n## ✅ What happens at the end?\n\n→ [Final result that user sees or gets]\n\n---\n\nNow, here is the workflow to analyze:\n\n\\`\\`\\`json\n${JSON.stringify(workflow, null, 2)}\n\\`\\`\\`\n`;\n\nreturn [\n  {\n    json: {\n      contents: [\n        {\n          parts: [\n            {\n              text: prompt\n            }\n          ]\n        }\n      ]\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1216,
+        768
+      ],
+      "id": "551aabeb-2142-4c76-9117-048848ffbbfe",
+      "name": " MAKE PREETY WAY"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-goog-api-key",
+              "value": "YOUR_GOOGLE_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -992,
+        768
+      ],
+      "id": "b4c63a7c-e542-46c6-ae8b-c28ec912ea96",
+      "name": " SUMMARIZE IT"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1f4d298-9c36-468b-bcc1-05c5d97cde8d",
+              "name": "MESSAGE",
+              "value": "={{ $json.body.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -768,
+        768
+      ],
+      "id": "cd40d07c-3192-431f-ba44-db96cb793f15",
+      "name": " EXTRACT DATA"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-goog-api-key",
+              "value": "YOUR_GOOGLE_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "= {\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"You are a professional voice scriptwriter for product videos and reels. You write natural-sounding 60-second voiceover scripts from technical content. Keep tone friendly, confident, and conversational—no jargon, no emojis.\\n\\nWrite a 60-second voiceover script using this format:\\n\\n1. Hook with a real-world scenario or problem that professionals often face\\n2. Introduce the solution (without using words like 'workflow' or 'project')—describe it as a tool, AI assistant, or system\\n3. Explain how it works in 3–4 clear, simple steps\\n4. Mention a real-world situation or use-case where it helps\\n5. End with a strong, clear takeaway or next step\\n\\nKeep it around 150–180 words. No emojis. No bullet points. Return only the voiceover script.\\n\\nHere is the technical input to base it on:\\n\\n[BEGIN INPUT]\\n{{ $json.cleanedText }}\\n[END INPUT]\"\n        }\n      ]\n    }\n  ]\n}\n",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1840,
+        1040
+      ],
+      "id": "03fa8925-8298-4a0f-989c-1588981512bc",
+      "name": " SUMMARIZE IT1"
+    },
+    {
+      "parameters": {
+        "jsCode": " const scriptRaw = items[0].json.SCRIPT;\n\nif (!scriptRaw || typeof scriptRaw !== 'string') {\n  throw new Error(\"SCRIPT is missing or not a string\");\n}\n\n// 1. Split script into scenes using regex\nconst sceneRegex = /\\*\\*Scene (\\d+): (.*?)\\*\\*([\\s\\S]*?)(?=\\*\\*Scene \\d+:|$)/g;\nconst fieldRegexMap = {\n  sceneTitle: /\\*\\*sceneTitle:\\*\\*\\s*(.*)/i,\n  dialogueSummary: /\\*\\*dialogueSummary:\\*\\*\\s*(.*)/i,\n  avatarDialog: /\\*\\*avatarDialog:\\*\\*\\s*\"(.*)\"/i,\n  hdImagePrompt: /\\*\\*hdImagePrompt:\\*\\*\\s*(.*)/i,\n  motionFramePrompt: /\\*\\*motionFramePrompt:\\*\\*\\s*(.*)/i\n};\n\nconst scenes = [];\nlet match;\nwhile ((match = sceneRegex.exec(scriptRaw)) !== null) {\n  const sceneNum = parseInt(match[1], 10);\n  const title = match[2].trim();\n  const sceneBody = match[3];\n\n  const sceneObj = {\n    sceneNumber: sceneNum,\n    sceneTitle: title\n  };\n\n  for (const [key, regex] of Object.entries(fieldRegexMap)) {\n    const fieldMatch = sceneBody.match(regex);\n    sceneObj[key] = fieldMatch ? fieldMatch[1].trim() : \"\";\n  }\n\n  scenes.push({ json: sceneObj });\n}\n\n// 2. Return each scene as separate item\nreturn scenes;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        1040
+      ],
+      "id": "30fc4f0f-dbf4-44aa-94ad-256134c45881",
+      "name": " CLEAN SCRIPT"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "=SCENE 1\nMOTION \n{{ $('EXTRACT DATA').item.json.MOTION }}\nVOICE\n{{ $('EXTRACT DATA').item.json.VOICE }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1440,
+        512
+      ],
+      "id": "f805c159-7b67-4b52-983e-512b2a761a54",
+      "name": "Send a photo message",
+      "webhookId": "YOUR_WEBHOOK_URL",
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_ME",
+          "name": " N8N TESTING"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map((item, index) => {\n  return {\n    json: {\n      sceneNumber: item.json.sceneNumber,\n      sceneMessage: item.json.avatarDialog?.trim(),\n      hdImagePrompt: item.json.hdImagePrompt?.trim(),\n      motionFramePrompt: item.json.motionFramePrompt?.trim()\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -272,
+        1040
+      ],
+      "id": "83d49566-e2cb-41f8-bb09-3b7a7d8b1e1f",
+      "name": " SEPERATE SCENES"
+    },
+    {
+      "parameters": {
+        "jsCode": " // Input: entire array of scenes from previous node\n// Output: only the object with sceneNumber === 1\n\nreturn items\n  .map(item => item.json)\n  .filter(scene => scene.sceneNumber === 1)\n  .map(scene => ({ json: scene }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        512
+      ],
+      "id": "1852eb9f-91c2-44f9-a70e-85e13c46411d",
+      "name": " SCENE 1"
+    },
+    {
+      "parameters": {
+        "jsCode": " // Input: entire array of scenes from previous node\n// Output: only the object with sceneNumber === 1\n\nreturn items\n  .map(item => item.json)\n  .filter(scene => scene.sceneNumber === 2)\n  .map(scene => ({ json: scene }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        704
+      ],
+      "id": "97571ea0-0127-4bba-bbf9-ae9d48283a25",
+      "name": " SCENE 2"
+    },
+    {
+      "parameters": {
+        "jsCode": " // Input: entire array of scenes from previous node\n// Output: only the object with sceneNumber === 1\n\nreturn items\n  .map(item => item.json)\n  .filter(scene => scene.sceneNumber === 3)\n  .map(scene => ({ json: scene }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        896
+      ],
+      "id": "eb7fa249-d9c2-45a0-92f8-cb71b833954d",
+      "name": "  SCENE 3"
+    },
+    {
+      "parameters": {
+        "jsCode": " // Input: entire array of scenes from previous node\n// Output: only the object with sceneNumber === 1\n\nreturn items\n  .map(item => item.json)\n  .filter(scene => scene.sceneNumber === 4)\n  .map(scene => ({ json: scene }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        1088
+      ],
+      "id": "97d83ade-fa10-4155-bd29-a78106e5433a",
+      "name": "  SCENE 4"
+    },
+    {
+      "parameters": {
+        "jsCode": " // Input: entire array of scenes from previous node\n// Output: only the object with sceneNumber === 1\n\nreturn items\n  .map(item => item.json)\n  .filter(scene => scene.sceneNumber === 5)\n  .map(scene => ({ json: scene }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        1280
+      ],
+      "id": "502aacf9-4ff9-4afc-98f3-cd27ea894bbb",
+      "name": "  SCENE 5"
+    },
+    {
+      "parameters": {
+        "jsCode": " // Input: entire array of scenes from previous node\n// Output: only the object with sceneNumber === 1\n\nreturn items\n  .map(item => item.json)\n  .filter(scene => scene.sceneNumber === 6)\n  .map(scene => ({ json: scene }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        1472
+      ],
+      "id": "3e2ccbf8-0a28-41e8-8831-e6662e665051",
+      "name": " SCENE 6"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": " https://api.together.xyz/v1/images/generations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_TOGETHER_API_KEY"
+            },
+            {
+              "name": " Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "image/png"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "= {\n  \"model\": \"black-forest-labs/FLUX.1-schnell\",\n  \"prompt\": \"{{ $json.promtp }}\",\n  \"n\": 1,\n  \"width\": 432,\n  \"height\": 768\n}\n",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        992,
+        512
+      ],
+      "id": "9f72e323-2f9c-4d9c-b90b-6fb162cb6eb3",
+      "name": " IMAGE URL GENERATION"
+    },
+    {
+      "parameters": {
+        "url": "= {{ $json.body.data[0].url }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1216,
+        512
+      ],
+      "id": "db43743b-4040-4716-8110-cffaf5781603",
+      "name": " IMAGE DOWNLOAD"
+    },
+    {
+      "parameters": {
+        "amount": 75
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        768,
+        1088
+      ],
+      "id": "fe15ebd8-ef59-4b07-8cf8-cc5282c647d3",
+      "name": "Wait2",
+      "webhookId": "YOUR_WEBHOOK_URL"
+    },
+    {
+      "parameters": {
+        "amount": 75
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        768,
+        896
+      ],
+      "id": "29152a3f-8b59-4881-b689-d5ad75b80e63",
+      "name": "Wait3",
+      "webhookId": "YOUR_WEBHOOK_URL"
+    },
+    {
+      "parameters": {
+        "amount": 75
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        768,
+        704
+      ],
+      "id": "89e6e8bb-b1dd-4ffe-9287-362bf96de317",
+      "name": "Wait4",
+      "webhookId": "YOUR_WEBHOOK_URL"
+    },
+    {
+      "parameters": {
+        "amount": 75
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        768,
+        1280
+      ],
+      "id": "b1df4365-a4d8-4d1a-af0f-1bc2638a9e2c",
+      "name": "Wait5",
+      "webhookId": "YOUR_WEBHOOK_URL"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1ce6a895-0d38-4347-b485-dcb60039a1f5",
+              "name": "SCRIPT",
+              "value": "={{ $json.body.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -944,
+        1040
+      ],
+      "id": "91ef15ef-d17f-437f-b782-7d9fc503b8f6",
+      "name": " SENDING SCRIPT1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-goog-api-key",
+              "value": "YOUR_GOOGLE_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "= {\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"You are a top-tier AI video assistant. Break the user's script into 6 cinematic scenes designed for a high-impact LinkedIn/YouTube video.\\n\\nFor each scene, generate the following:\\n\\n1. **sceneTitle** – Catchy, short title (4-7 words)\\n2. **dialogueSummary** – A one-line summary of what the avatar is saying in natural, conversational tone\\n3. **avatarDialog** – The exact sentence to be spoken by the avatar, as if addressing a professional audience on camera\\n4. **hdImagePrompt** – A detailed, photorealistic prompt for generating an ultra-HD 16:9 image using tools like DALLE-3, Midjourney, or Leonardo. Include expressions, camera angle, lighting, setting, and visual emotion\\n5. **motionFramePrompt** – A vivid prompt describing a dynamic cinematic camera movement or subtle animation (for use in Runway or Pika) that directly matches and expands on the image scene\\n\\nMake the visuals highly realistic, emotionally resonant, and logically consistent across scenes. Use professional lighting and environments relevant to business/startup/productivity themes.\\n\\nHere is the user script to break down:\\n\\n\\\"\\\"\\\"\\n{{ $json.cleanedScript }}\\n\\\"\\\"\\\"\"\n        }\n      ]\n    }\n  ]\n}\n",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1168,
+        1040
+      ],
+      "id": "1c754ba1-32a4-4e26-ad7e-9e20eb4a9e55",
+      "name": " SUMMARIZE IT2"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "=SCENE 2\nMOTION \n{{ $('EXTRACT DATA1').item.json.MOTION }}\nVOICE\n{{ $('EXTRACT DATA1').item.json.VOICE }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1664,
+        704
+      ],
+      "id": "051af9ee-cbfe-4d97-81b6-97063eba12b0",
+      "name": "Send a photo message1",
+      "webhookId": "YOUR_WEBHOOK_URL",
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_ME",
+          "name": " N8N TESTING"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": " https://api.together.xyz/v1/images/generations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_TOGETHER_API_KEY"
+            },
+            {
+              "name": " Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "image/png"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "= {\n  \"model\": \"black-forest-labs/FLUX.1-schnell\",\n  \"prompt\": \"{{ $json.promtp }}\",\n  \"n\": 1,\n  \"width\": 432,\n  \"height\": 768\n}\n",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1216,
+        704
+      ],
+      "id": "e8dfb267-cfe9-4bb1-9661-1af580aefbae",
+      "name": " IMAGE URL GENERATION1"
+    },
+    {
+      "parameters": {
+        "url": "= {{ $json.body.data[0].url }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        704
+      ],
+      "id": "589576d7-81f5-4204-8c7a-7db9a154e9bd",
+      "name": " IMAGE DOWNLOAD1"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "=SCENE 3\nMOTION \n{{ $('EXTRACT DATA2').item.json.MOTION }}\nVOICE\n{{ $('EXTRACT DATA2').item.json.VOICE }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1664,
+        896
+      ],
+      "id": "b477ffb1-6316-430b-9609-7d64eb6ff29b",
+      "name": "Send a photo message2",
+      "webhookId": "YOUR_WEBHOOK_URL",
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_ME",
+          "name": " N8N TESTING"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": " https://api.together.xyz/v1/images/generations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_TOGETHER_API_KEY"
+            },
+            {
+              "name": " Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "image/png"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "= {\n  \"model\": \"black-forest-labs/FLUX.1-schnell\",\n  \"prompt\": \"{{ $json.promtp }}\",\n  \"n\": 1,\n  \"width\": 432,\n  \"height\": 768\n}\n",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1216,
+        896
+      ],
+      "id": "eb75d9b0-9fe0-43a8-912f-46c9054d1d31",
+      "name": " IMAGE URL GENERATION2"
+    },
+    {
+      "parameters": {
+        "url": "= {{ $json.body.data[0].url }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        896
+      ],
+      "id": "225772de-aed5-4738-ac7a-d677faacf0f1",
+      "name": " IMAGE DOWNLOAD2"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "=SCENE 4\nMOTION \n{{ $('EXTRACT DATA3').item.json.MOTION }}\nVOICE\n{{ $('EXTRACT DATA3').item.json.VOICE }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1664,
+        1088
+      ],
+      "id": "a189f413-93a7-4419-863a-966b287291cd",
+      "name": "Send a photo message3",
+      "webhookId": "YOUR_WEBHOOK_URL",
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_ME",
+          "name": " N8N TESTING"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": " https://api.together.xyz/v1/images/generations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_TOGETHER_API_KEY"
+            },
+            {
+              "name": " Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "image/png"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "= {\n  \"model\": \"black-forest-labs/FLUX.1-schnell\",\n  \"prompt\": \"{{ $json.promtp }}\",\n  \"n\": 1,\n  \"width\": 432,\n  \"height\": 768\n}\n",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1216,
+        1088
+      ],
+      "id": "033108fa-749c-4f64-a74e-045ca7df31af",
+      "name": " IMAGE URL GENERATION3"
+    },
+    {
+      "parameters": {
+        "url": "= {{ $json.body.data[0].url }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        1088
+      ],
+      "id": "bd073475-839f-44e3-9ab9-269ab6356fcd",
+      "name": " IMAGE DOWNLOAD3"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "=SCENE 5\nMOTION \n{{ $('EXTRACT DATA4').item.json.MOTION }}\nVOICE\n{{ $('EXTRACT DATA4').item.json.VOICE }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1664,
+        1280
+      ],
+      "id": "81fd5ee1-65b7-4cfd-9a89-6eed4ead6746",
+      "name": "Send a photo message4",
+      "webhookId": "YOUR_WEBHOOK_URL",
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_ME",
+          "name": " N8N TESTING"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": " https://api.together.xyz/v1/images/generations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_TOGETHER_API_KEY"
+            },
+            {
+              "name": " Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "image/png"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "= {\n  \"model\": \"black-forest-labs/FLUX.1-schnell\",\n  \"prompt\": \"{{ $json.promtp }}\",\n  \"n\": 1,\n  \"width\": 432,\n  \"height\": 768\n}\n",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1216,
+        1280
+      ],
+      "id": "322a6df1-26a7-4640-8660-63a97185488e",
+      "name": " IMAGE URL GENERATION4"
+    },
+    {
+      "parameters": {
+        "url": "= {{ $json.body.data[0].url }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        1280
+      ],
+      "id": "4994d51e-8adf-4440-80f4-887b62d29eb7",
+      "name": " IMAGE DOWNLOAD4"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "=SCENE 6\nMOTION \n{{ $('EXTRACT DATA5').item.json.MOTION }}\nVOICE\n{{ $('EXTRACT DATA5').item.json.VOICE }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1664,
+        1472
+      ],
+      "id": "730e28c0-a887-492a-a7d5-391ba3d0abb7",
+      "name": "Send a photo message5",
+      "webhookId": "YOUR_WEBHOOK_URL",
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_ME",
+          "name": " N8N TESTING"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": " https://api.together.xyz/v1/images/generations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_TOGETHER_API_KEY"
+            },
+            {
+              "name": " Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "image/png"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "= {\n  \"model\": \"black-forest-labs/FLUX.1-schnell\",\n  \"prompt\": \"{{ $json.promtp }}\",\n  \"n\": 1,\n  \"width\": 432,\n  \"height\": 768\n}\n",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1216,
+        1472
+      ],
+      "id": "298c0505-2c20-42cd-8b3c-9f64107938a7",
+      "name": " IMAGE URL GENERATION5"
+    },
+    {
+      "parameters": {
+        "url": "= {{ $json.body.data[0].url }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        1472
+      ],
+      "id": "339cddec-b0fe-42ad-af39-5ca1080a9ef9",
+      "name": " IMAGE DOWNLOAD5"
+    },
+    {
+      "parameters": {
+        "amount": 45
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        768,
+        1472
+      ],
+      "id": "72e89fe5-75bf-49c8-ab3c-6ac7ad983d9c",
+      "name": "Wait",
+      "webhookId": "YOUR_WEBHOOK_URL"
+    },
+    {
+      "parameters": {
+        "jsCode": " const rawText = $input.first().json.MESSAGE || '';\n\nfunction cleanText(text) {\n  const emojiPattern = /[\\p{Emoji_Presentation}\\p{Extended_Pictographic}]/gu;\n\n  return text\n    .replace(emojiPattern, '')                         // Remove emojis\n    .replace(/➤|→|✅/g, '')                            // Remove arrows, checkmarks\n    .replace(/---+/g, '')                              // Remove divider lines\n    .replace(/\\*\\*/g, '')                              // Remove bold markdown\n    .replace(/##+\\s?/g, '')                            // Remove markdown headings\n    .replace(/\\n{2,}/g, '\\n')                          // Collapse extra newlines\n    .split('\\n')\n    .map(line => line.trim())\n    .filter(line => line.length > 0)\n    .join('\\n\\n');\n}\n\nreturn [\n  {\n    json: {\n      cleanedText: cleanText(rawText)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        768
+      ],
+      "id": "30a307de-bfa1-4bce-8443-08711318629e",
+      "name": " CLEANS IT UP"
+    },
+    {
+      "parameters": {
+        "jsCode": " const input = $input.first().json.cleanedText;\n\nconst cleaned = input\n  .replace(/\\/+/g, '')                 // remove all slashes\n  .replace(/\\n+/g, ' ')                // replace newlines with space\n  .replace(/[^a-zA-Z0-9., ]+/g, '')    // remove special characters except comma, full stop, space\n  .replace(/\\s+/g, ' ')                // collapse multiple spaces\n  .trim();                             // remove leading/trailing spaces\n\nreturn [{ cleanedText: cleaned }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        768
+      ],
+      "id": "808dc357-1881-465a-9372-e00ffdd4efd3",
+      "name": "MAKE PREETY"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over each input item and remove dialogueSummary\nreturn items.map(item => {\n  const cleanedScene = { ...item.json };\n  delete cleanedScene.dialogueSummary; // Remove the field\n  return {\n    json: cleanedScene\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -496,
+        1040
+      ],
+      "id": "00468899-8cdc-4dc3-b55c-e94596058c1a",
+      "name": "NAME SCENES"
+    },
+    {
+      "parameters": {
+        "jsCode": " const input = $input.first().json.SCRIPT;\n\nconst cleaned = input\n  .replace(/\\/+/g, '')                 // remove all slashes\n  .replace(/\\n+/g, ' ')                // replace newlines with space\n  .replace(/[^\\w\\s.,]+/g, '')          // remove special characters except a-zA-Z0-9 . , and space\n  .replace(/\\s+/g, ' ')                // collapse multiple spaces\n  .trim();                             // remove leading/trailing spaces\n\nreturn [{ cleanedScript: cleaned }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1392,
+        1040
+      ],
+      "id": "accfefeb-6716-40ec-b0b8-183691873aa8",
+      "name": "REMOVE GLITCH"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3bf958be-1448-4048-97f4-a6f60322fbd3",
+              "name": "promtp",
+              "value": "={{ $json.hdImagePrompt }}",
+              "type": "string"
+            },
+            {
+              "id": "1d231005-3e0a-4688-90bd-530dc9b71986",
+              "name": "MOTION",
+              "value": "={{ $json.motionFramePrompt }}",
+              "type": "string"
+            },
+            {
+              "id": "fe7084c0-6e85-4fb3-9e23-999f420dab5a",
+              "name": "VOICE",
+              "value": "={{ $json.sceneMessage }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        768,
+        512
+      ],
+      "id": "5c068e42-0bf1-4bd2-8dcd-a623963fa7da",
+      "name": "EXTRACT DATA"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3bf958be-1448-4048-97f4-a6f60322fbd3",
+              "name": "promtp",
+              "value": "={{ $json.hdImagePrompt }}",
+              "type": "string"
+            },
+            {
+              "id": "1d231005-3e0a-4688-90bd-530dc9b71986",
+              "name": "MOTION",
+              "value": "={{ $json.motionFramePrompt }}",
+              "type": "string"
+            },
+            {
+              "id": "fe7084c0-6e85-4fb3-9e23-999f420dab5a",
+              "name": "VOICE",
+              "value": "={{ $json.sceneMessage }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        992,
+        704
+      ],
+      "id": "3797463d-dae2-405d-85aa-125f6c1887cc",
+      "name": "EXTRACT DATA1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3bf958be-1448-4048-97f4-a6f60322fbd3",
+              "name": "promtp",
+              "value": "={{ $json.hdImagePrompt }}",
+              "type": "string"
+            },
+            {
+              "id": "1d231005-3e0a-4688-90bd-530dc9b71986",
+              "name": "MOTION",
+              "value": "={{ $json.motionFramePrompt }}",
+              "type": "string"
+            },
+            {
+              "id": "fe7084c0-6e85-4fb3-9e23-999f420dab5a",
+              "name": "VOICE",
+              "value": "={{ $json.sceneMessage }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        992,
+        896
+      ],
+      "id": "d0202f72-95d7-4e91-ba17-03de8245a44e",
+      "name": "EXTRACT DATA2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3bf958be-1448-4048-97f4-a6f60322fbd3",
+              "name": "promtp",
+              "value": "={{ $json.hdImagePrompt }}",
+              "type": "string"
+            },
+            {
+              "id": "1d231005-3e0a-4688-90bd-530dc9b71986",
+              "name": "MOTION",
+              "value": "={{ $json.motionFramePrompt }}",
+              "type": "string"
+            },
+            {
+              "id": "fe7084c0-6e85-4fb3-9e23-999f420dab5a",
+              "name": "VOICE",
+              "value": "={{ $json.sceneMessage }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        992,
+        1088
+      ],
+      "id": "054748e3-f838-444f-98cf-61171c007786",
+      "name": "EXTRACT DATA3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3bf958be-1448-4048-97f4-a6f60322fbd3",
+              "name": "promtp",
+              "value": "={{ $json.hdImagePrompt }}",
+              "type": "string"
+            },
+            {
+              "id": "1d231005-3e0a-4688-90bd-530dc9b71986",
+              "name": "MOTION",
+              "value": "={{ $json.motionFramePrompt }}",
+              "type": "string"
+            },
+            {
+              "id": "fe7084c0-6e85-4fb3-9e23-999f420dab5a",
+              "name": "VOICE",
+              "value": "={{ $json.sceneMessage }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        992,
+        1280
+      ],
+      "id": "f84e03ed-69c6-4efa-9930-0a1588bd81e9",
+      "name": "EXTRACT DATA4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3bf958be-1448-4048-97f4-a6f60322fbd3",
+              "name": "promtp",
+              "value": "={{ $json.hdImagePrompt }}",
+              "type": "string"
+            },
+            {
+              "id": "1d231005-3e0a-4688-90bd-530dc9b71986",
+              "name": "MOTION",
+              "value": "={{ $json.motionFramePrompt }}",
+              "type": "string"
+            },
+            {
+              "id": "fe7084c0-6e85-4fb3-9e23-999f420dab5a",
+              "name": "VOICE",
+              "value": "={{ $json.sceneMessage }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        992,
+        1472
+      ],
+      "id": "f5dcb2d0-74d7-481f-8694-c30fc64a880e",
+      "name": "EXTRACT DATA5"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    " SENDING SCRIPT": {
+      "main": [
+        [
+          {
+            "node": "REMOVE GLITCH",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "EXTRACT JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EXTRACT JSON": {
+      "main": [
+        [
+          {
+            "node": " MAKE PREETY WAY",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " MAKE PREETY WAY": {
+      "main": [
+        [
+          {
+            "node": " SUMMARIZE IT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " SUMMARIZE IT": {
+      "main": [
+        [
+          {
+            "node": " EXTRACT DATA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " EXTRACT DATA": {
+      "main": [
+        [
+          {
+            "node": " CLEANS IT UP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " SUMMARIZE IT1": {
+      "main": [
+        [
+          {
+            "node": " SENDING SCRIPT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " CLEAN SCRIPT": {
+      "main": [
+        [
+          {
+            "node": "NAME SCENES",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " SEPERATE SCENES": {
+      "main": [
+        [
+          {
+            "node": "  SCENE 4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "  SCENE 5",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": " SCENE 6",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": " SCENE 2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "  SCENE 3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": " SCENE 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " SCENE 1": {
+      "main": [
+        [
+          {
+            "node": "EXTRACT DATA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " SCENE 2": {
+      "main": [
+        [
+          {
+            "node": "Wait4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "  SCENE 3": {
+      "main": [
+        [
+          {
+            "node": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "  SCENE 4": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "  SCENE 5": {
+      "main": [
+        [
+          {
+            "node": "Wait5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " SCENE 6": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " IMAGE URL GENERATION": {
+      "main": [
+        [
+          {
+            "node": " IMAGE DOWNLOAD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " IMAGE DOWNLOAD": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait4": {
+      "main": [
+        [
+          {
+            "node": "EXTRACT DATA1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait3": {
+      "main": [
+        [
+          {
+            "node": "EXTRACT DATA2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "EXTRACT DATA3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait5": {
+      "main": [
+        [
+          {
+            "node": "EXTRACT DATA4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " SENDING SCRIPT1": {
+      "main": [
+        [
+          {
+            "node": " CLEAN SCRIPT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " SUMMARIZE IT2": {
+      "main": [
+        [
+          {
+            "node": " SENDING SCRIPT1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " IMAGE URL GENERATION1": {
+      "main": [
+        [
+          {
+            "node": " IMAGE DOWNLOAD1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " IMAGE DOWNLOAD1": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " IMAGE URL GENERATION2": {
+      "main": [
+        [
+          {
+            "node": " IMAGE DOWNLOAD2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " IMAGE DOWNLOAD2": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " IMAGE URL GENERATION3": {
+      "main": [
+        [
+          {
+            "node": " IMAGE DOWNLOAD3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " IMAGE DOWNLOAD3": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " IMAGE URL GENERATION4": {
+      "main": [
+        [
+          {
+            "node": " IMAGE DOWNLOAD4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " IMAGE DOWNLOAD4": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " IMAGE URL GENERATION5": {
+      "main": [
+        [
+          {
+            "node": " IMAGE DOWNLOAD5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " IMAGE DOWNLOAD5": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "EXTRACT DATA5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " CLEANS IT UP": {
+      "main": [
+        [
+          {
+            "node": "MAKE PREETY",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MAKE PREETY": {
+      "main": [
+        [
+          {
+            "node": " SUMMARIZE IT1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NAME SCENES": {
+      "main": [
+        [
+          {
+            "node": " SEPERATE SCENES",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "REMOVE GLITCH": {
+      "main": [
+        [
+          {
+            "node": " SUMMARIZE IT2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EXTRACT DATA": {
+      "main": [
+        [
+          {
+            "node": " IMAGE URL GENERATION",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EXTRACT DATA1": {
+      "main": [
+        [
+          {
+            "node": " IMAGE URL GENERATION1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EXTRACT DATA2": {
+      "main": [
+        [
+          {
+            "node": " IMAGE URL GENERATION2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EXTRACT DATA3": {
+      "main": [
+        [
+          {
+            "node": " IMAGE URL GENERATION3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EXTRACT DATA4": {
+      "main": [
+        [
+          {
+            "node": " IMAGE URL GENERATION4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EXTRACT DATA5": {
+      "main": [
+        [
+          {
+            "node": " IMAGE URL GENERATION5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3cb2f8e1-1ed9-4a01-bb34-3813cb4e1e24",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "REPLACE_ME"
+  },
+  "id": "DBC7LFUUwmxEfuyy",
+  "tags": []
+}
